@@ -1,1 +1,0 @@
-print(' '.join(str(i) for i in (sorted(set([ int(i) for i in input().split() ]).intersection(set([ int(j) for j in input().split() ]))))))

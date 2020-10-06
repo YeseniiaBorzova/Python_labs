@@ -1,1 +1,0 @@
-print(len(set([ int(i) for i in input().split() ]).intersection(set([ int(j) for j in input().split() ]))))
