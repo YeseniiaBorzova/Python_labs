@@ -30,19 +30,28 @@ class Sales:
         self.arr_amount = arr_amount
         #self.init_sale(arr_prod, arr_amount)
 
-    # def change_amount(self, amount):
-    #     con = sqlite3.connect("shop.db")
-    #     cur = con.cursor()
-    #     cur.execute("""UPDATE Sold_product SET amount = ? WHERE sale_id = ?""", (amount, self.sale_id))
-    #     con.commit()
-    #     con.close()
-    #
-    # def change_date(self, date):
-    #     con = sqlite3.connect("shop.db")
-    #     cur = con.cursor()
-    #     cur.execute("""UPDATE Sales SET date = ? WHERE sale_id = ?""", (date, self.sale_id))
-    #     con.commit()
-    #     con.close()
+    @staticmethod
+    def find_sale_by_date(date):
+        con = sqlite3.connect("shop.db")
+        cur = con.cursor()
+        cur.execute("""SELECT sale_id, seller_id, date FROM Sales
+                            WHERE date LIKE ?""", (date+'%',))
+        arr = cur.fetchall()
+        res = ""
+        for sale in arr:
+            res += "-Id " + str(sale[0]) + ", Seller_id " + str(sale[1]) + ", date: " + str(sale[2])
+        con.commit()
+        con.close()
+        return res
+
+    @staticmethod
+    def delete_sale_by_id(id):
+        con = sqlite3.connect("shop.db")
+        cur = con.cursor()
+        cur.execute("""DELETE FROM Sales WHERE sale_id = ?""", (id,))
+        con.commit()
+        cur.execute("""DELETE FROM Sold_product WHERE sale_id = ?""", (id,))
+        con.close()
 
     @staticmethod
     def find_sale_by_id(id):

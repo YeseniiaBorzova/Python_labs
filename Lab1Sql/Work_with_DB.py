@@ -147,4 +147,3 @@ def work_with_seller():
             print("wrong output!")
 
 
-first_menu()

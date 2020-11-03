@@ -75,7 +75,7 @@ class Seller:
         arr = cur.fetchall()
         con.commit()
         con.close()
-        return "ID: "+str(arr[0][0])+", Full name: "+arr[0][1]+' '+arr[0][2]+' '+arr[0][3]+\
+        return "ID: "+str(arr[0][0])+", Name: "+arr[0][1]+' '+arr[0][2]+' '+arr[0][3]+\
                ", comission percent - "+str(arr[0][4])+"%"
 
     def seller_income(self):

@@ -30,7 +30,7 @@ class Product:
         arr_prod = cur.fetchall()
         res = ""
         for prod in arr_prod:
-            res += "Id: " + str(prod[0]) + ", name: " + prod[1] + ", measurment unit: "+prod[2] + ", purchase price: " + str(prod[3])\
+            res += "Id: " + str(prod[0]) + ", name: " + prod[1] + "; measurment unit: "+prod[2] + ", purchase price: " + str(prod[3])\
                    + "$, sell price:" + str(prod[4])+"$"+"\n"
         return res
 
@@ -52,10 +52,10 @@ class Product:
         return prod_id[0][0]
 
     @staticmethod
-    def delete_product_by_id(prod_id):
+    def delete_product_by_name(name):
         con = sqlite3.connect("shop.db")
         cur = con.cursor()
-        cur.execute("""DELETE FROM Product WHERE product_id = ?""", (prod_id,))
+        cur.execute("""DELETE FROM Product WHERE name = ?""", (name,))
         con.commit()
         con.close()
 
