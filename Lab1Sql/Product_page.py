@@ -1,5 +1,7 @@
 from functools import partial
 import re
+from docx import Document
+import openpyxl
 from Product import Product
 from page import Page
 from tkinter import messagebox
@@ -7,6 +9,7 @@ from tkinter import *
 
 
 class ProductPage(Page):
+
     def __init__(self, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
 
@@ -20,9 +23,14 @@ class ProductPage(Page):
         self.allprod_listbox = Listbox(all_products, width=80)
         self.allprod_listbox.bind('<Double-1>',self.all_list_on_click)
         self.prod_list = Product.show_all_the_products().split("\n")
+        self.prod_list.pop(-1)
         for prod in self.prod_list:
             self.allprod_listbox.insert(END, prod)
         self.allprod_listbox.pack(side="top", fill="both")
+        all_docx = Button(all_products, text="Export info in docx about all products", command=self.form_docx_report())
+        all_docx.pack()
+        all_exel = Button(all_products, text="Export info in exel about all products", command=self.form_exel_report())
+        all_exel.pack()
 
         search_product = Frame(window)
         search_product.pack(side=LEFT, fill=Y)
@@ -144,3 +152,46 @@ class ProductPage(Page):
     def delete_prod(self, name):
         Product.delete_product_by_name(name.get)
         self.update_list(self.allprod_listbox)
+
+    def form_exel_report(self):
+        wb = openpyxl.load_workbook('Reports\\All_info.xlsx')
+        if 'Products' not in wb.sheetnames:
+            wb.create_sheet("Products")
+        ws = wb.get_sheet_by_name("Products")
+        ws.delete_cols(1,5)
+        ws.delete_rows(1,100)
+        for i in range(len(self.prod_list)):
+            result_id = re.search('Id: (.*), name', self.prod_list[i]).group(1)
+            result_name = re.search('name: (.*); ', self.prod_list[i]).group(1)
+            result_unit = re.search(' unit: (.*), purchase', self.prod_list[i]).group(1)
+            result_purch_price = re.search('purchase price: (.*), sell', self.prod_list[i]).group(1)
+            result_sell = re.search('sell price:(.*)', self.prod_list[i]).group(1)
+            ws.cell(row=i + 1, column=1).value = result_id
+            ws.cell(row=i + 1, column=2).value = result_name
+            ws.cell(row=i + 1, column=3).value = result_unit
+            ws.cell(row=i + 1, column=4).value = result_purch_price
+            ws.cell(row=i + 1, column=5).value = result_sell
+
+        wb.save('Reports\\All_info.xlsx')
+
+    def form_docx_report(self):
+        for i in self.prod_list:
+            self.prod_export(i)
+
+    def prod_export(self, prod):
+        result_id = re.search('Id: (.*), name', prod).group(1)
+        result_name = re.search('name: (.*); ', prod).group(1)
+        result_unit = re.search(' unit: (.*), purchase', prod).group(1)
+        result_purch_price = re.search('purchase price: (.*), sell', prod).group(1)
+        result_sell = re.search('sell price:(.*)', prod).group(1)
+
+        document = Document()
+        document.add_heading((result_id +' '+ result_name + ' ' + "(Product)"), 0)
+        document.add_heading("Overall information", level=1)
+        document.add_paragraph("Id: "+result_id)
+        document.add_paragraph("Name: " + result_name)
+        document.add_paragraph("Measurement unit: " + result_unit)
+        document.add_paragraph("Purchase price: " + result_purch_price)
+        document.add_paragraph("Sell price: " + result_sell)
+
+        document.save("Reports\\" + result_id + "." + result_name + ".docx")

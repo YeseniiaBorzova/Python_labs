@@ -36,6 +36,20 @@ class Seller:
         con.close()
         return seller_id[0][0]
 
+    @staticmethod
+    def find_seller_sales(id):
+        con = sqlite3.connect("shop.db")
+        cur = con.cursor()
+        cur.execute("""SELECT sale_id, seller_id, date FROM Sales WHERE seller_id = ?""", (id,))
+        sales = cur.fetchall()
+        res = ""
+        for sale in sales:
+            res += "ID: "+str(sale[0])+", seller id: "+str(sale[1])+", date:"+str(sale[2])+"\n"
+        con.commit()
+        con.close()
+        return res
+
+
     def find_seller_id(self):
         con = sqlite3.connect("shop.db")
         cur = con.cursor()

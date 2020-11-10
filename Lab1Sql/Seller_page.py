@@ -1,11 +1,15 @@
 from Seller import Seller
 from page import Page
 from tkinter import *
+from docx import Document
+import openpyxl
 from functools import partial
 from tkinter import messagebox
 import re
 
+
 class SellerPage(Page):
+
     def __init__(self, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
 
@@ -19,9 +23,14 @@ class SellerPage(Page):
         self.allseller_listbox = Listbox(all_sellers, width=80)
         self.allseller_listbox.bind('<Double-1>', self.all_list_on_click)
         self.seller_list = Seller.show_all_sellers().split("\n")
+        self.seller_list.pop(-1)
         for seller in self.seller_list:
             self.allseller_listbox.insert(END, seller)
         self.allseller_listbox.pack(side="top", fill="both")
+        all_docx = Button(all_sellers, text="Export info in docx about all sellers", command=self.form_docx_report())
+        all_docx.pack()
+        all_exel = Button(all_sellers, text="Export info in exel about all sellers", command = self.form_exel_report())
+        all_exel.pack()
 
         search_seller = Frame(window)
         search_seller.pack(side=LEFT, fill=Y)
@@ -118,3 +127,53 @@ class SellerPage(Page):
     def find_income(self, surname):
         self.seller_income = Seller.seller_income_by_surname(surname.get())
         return ", income: "+self.seller_income
+
+    def form_exel_report(self):
+        wb = openpyxl.load_workbook('Reports\\All_info.xlsx')
+        if 'Sellers' not in wb.sheetnames:
+            wb.create_sheet("Sellers")
+        ws = wb.get_sheet_by_name("Sellers")
+        ws.delete_cols(1, 3)
+        ws.delete_rows(1, 100)
+        for i in range(len(self.seller_list)):
+            result_id = re.search('Id: (.*), Name', self.seller_list[i]).group(1)
+            result_name = re.search('Name: (.*), comission ', self.seller_list[i]).group(1)
+            result_percent = re.search(' percent: (.*) ', self.seller_list[i]).group(1)
+            ws.cell(row=i + 1, column=1).value = result_id
+            ws.cell(row=i + 1, column=2).value = result_name
+            ws.cell(row=i + 1, column=3).value = result_percent
+
+
+        wb.save('Reports\\All_info.xlsx')
+
+    def form_docx_report(self):
+        for i in self.seller_list:
+            self.seller_export(i)
+
+    def seller_export(self, seller):
+        result_id = re.search('Id: (.*), Name', seller).group(1)
+        result_name = re.search('Name: (.*), comission ', seller).group(1)
+        result_percent = re.search(' percent: (.*) ', seller).group(1)
+        result = Seller.find_seller_sales(result_id).split("\n")
+        result.pop(-1)
+        document = Document()
+        document.add_heading((result_id + ' ' + result_name + ' ' + "(Seller)"), 0)
+        document.add_heading("Overall information", level=1)
+        document.add_paragraph("Id: " + result_id)
+        document.add_paragraph("Name: " + result_name)
+        document.add_paragraph("Commission percent: " + result_percent)
+        table = document.add_table(rows=1, cols=2)
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = 'Sale id'
+        hdr_cells[1].text = 'Date and time'
+        for i in range(len(result)):
+            if len(result)==0:
+                document.add_paragraph("No sales yet")
+
+            sale_id = re.search('ID: (.*), seller id', result[i]).group(1)
+            sale_date = re.search(', date:(.*)', result[i]).group(1)
+            row_cells = table.add_row().cells
+            row_cells[0].text = sale_id
+            row_cells[1].text = sale_date
+
+        document.save("Reports\\" + result_id + "." + result_name + ".docx")
