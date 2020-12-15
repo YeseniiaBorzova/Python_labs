@@ -26,6 +26,14 @@ class Seller:
         con.close()
 
     @staticmethod
+    def delete_seller_by_surname(surname):
+        con = sqlite3.connect("shop.db")
+        cur = con.cursor()
+        cur.execute("""DELETE FROM Seller WHERE surname = ?""", (surname,))
+        con.commit()
+        con.close()
+
+    @staticmethod
     def find_seller_id_by_surname(surname):
         con = sqlite3.connect("shop.db")
         cur = con.cursor()
